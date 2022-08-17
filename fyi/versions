@@ -1,6 +1,6 @@
 File: semgrep-grammars/src/tree-sitter-python/LICENSE
 Git repo name: tree-sitter-python
-Latest commit in repo: 24b530ca158d2782ea9046e756057a412e16b52f
+Latest commit in repo: de221eccf9a221f5b85474a553474a69b4b5784d
 Last change in file:
   commit eb7313534683093b9ae7811991561131d6824828
   Author: Max Brunsfeld <maxbrunsfeld@gmail.com>
@@ -10,25 +10,17 @@ Last change in file:
 ---
 File: semgrep-grammars/src/tree-sitter-python/grammar.js
 Git repo name: tree-sitter-python
-Latest commit in repo: 24b530ca158d2782ea9046e756057a412e16b52f
+Latest commit in repo: de221eccf9a221f5b85474a553474a69b4b5784d
 Last change in file:
-  commit 24b530ca158d2782ea9046e756057a412e16b52f
-  Author: R. E. Solritter <17429390+resolritter@users.noreply.github.com>
-  Date:   Fri Nov 12 01:37:43 2021 -0300
+  commit 188b6b062d8cb256e7dfe76b5ad5089bbdcb7014
+  Author: Max Brunsfeld <maxbrunsfeld@gmail.com>
+  Date:   Fri Jun 24 18:47:17 2022 -0700
   
-      Make the semicolon queryable (#135)
-      
-      * make semicolon queryable
-      
-      * regenerate parser
-      
-      * add tests
-      
-      * use SEMICOLON instead of repeating the semicolon literal everywhere
+      Ensure dedent tokens are returned even amid syntax errors
 ---
 File: semgrep-grammars/src/semgrep-python/grammar.js
 Git repo name: ocaml-tree-sitter-semgrep
-Latest commit in repo: 2a58b601e385459ce687d5ceacc0665b45ec5675
+Latest commit in repo: d5877e4a79979290501d49073b51e59ffb1a25a1
 Last change in file:
   commit 2a58b601e385459ce687d5ceacc0665b45ec5675
   Author: pad <pad@r2c.dev>

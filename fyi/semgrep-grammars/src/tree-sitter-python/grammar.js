@@ -7,19 +7,19 @@ const PREC = {
 
   parenthesized_expression: 1,
   parenthesized_list_splat: 1,
-  not: 1,
-  compare: 2,
   or: 10,
   and: 11,
-  bitwise_or: 12,
-  bitwise_and: 13,
-  xor: 14,
-  shift: 15,
-  plus: 16,
-  times: 17,
-  unary: 18,
-  power: 19,
-  call: 20,
+  not: 12,
+  compare: 13,
+  bitwise_or: 14,
+  bitwise_and: 15,
+  xor: 16,
+  shift: 17,
+  plus: 18,
+  times: 19,
+  unary: 20,
+  power: 21,
+  call: 22,
 }
 
 const SEMICOLON = ';'
@@ -38,6 +38,8 @@ module.exports = grammar({
     [$.tuple, $.tuple_pattern],
     [$.list, $.list_pattern],
     [$.with_item, $._collection_elements],
+    [$.named_expression, $.as_pattern],
+    [$.match_statement, $.primary_expression],
   ],
 
   supertypes: $ => [
@@ -56,6 +58,19 @@ module.exports = grammar({
     $._string_start,
     $._string_content,
     $._string_end,
+
+    // Mark comments as external tokens so that the external scanner is always
+    // invoked, even if no external token is expected. This allows for better
+    // error recovery, because the external scanner can maintain the overall
+    // structure by returning dedent tokens whenever a dedent occurs, even
+    // if no dedent is expected.
+    $.comment,
+
+    // Allow the external scanner to check for the validity of closing brackets
+    // so that it can avoid returning dedent tokens between brackets.
+    ']',
+    ')',
+    '}',
   ],
 
   inline: $ => [
@@ -188,9 +203,14 @@ module.exports = grammar({
     ),
 
     named_expression: $ => seq(
-      field('name', $.identifier),
+      field('name', $._named_expresssion_lhs),
       ':=',
       field('value', $.expression)
+    ),
+
+    _named_expresssion_lhs: $ => choice(
+      $.identifier,
+      alias('match', $.identifier), // ambiguity with match statement: only ":" at end of line decides if "match" keyword
     ),
 
     return_statement: $ => seq(
@@ -228,7 +248,8 @@ module.exports = grammar({
       $.with_statement,
       $.function_definition,
       $.class_definition,
-      $.decorated_definition
+      $.decorated_definition,
+      $.match_statement,
     ),
 
     if_statement: $ => seq(
@@ -251,6 +272,27 @@ module.exports = grammar({
       'else',
       ':',
       field('body', $._suite)
+    ),
+
+    match_statement: $ => seq(
+      'match',
+      commaSep1(field('subject', $.expression)),
+      optional(','),
+      ':',
+      repeat(field('alternative', $.case_clause))),
+
+    case_clause: $ => seq(
+      'case',
+      commaSep1(
+        field(
+          'pattern',
+          alias(choice($.expression, $.list_splat_pattern), $.case_pattern),
+        )
+      ),
+      optional(','),
+      optional(field('guard', $.if_clause)),
+      ':',
+      field('consequence', $._suite)
     ),
 
     for_statement: $ => seq(
@@ -320,10 +362,6 @@ module.exports = grammar({
 
     with_item: $ => prec.dynamic(-1, seq(
       field('value', $.expression),
-      optional(seq(
-        'as',
-        field('alias', $.pattern)
-      ))
     )),
 
     function_definition: $ => seq(
@@ -472,12 +510,14 @@ module.exports = grammar({
       $.typed_default_parameter,
       $.list_splat_pattern,
       $.tuple_pattern,
-      alias('*', $.list_splat_pattern),
+      $.keyword_separator,
+      $.positional_separator,
       $.dictionary_splat_pattern
     ),
 
     pattern: $ => choice(
       $.identifier,
+      alias('match', $.identifier), // ambiguity with match statement: only ":" at end of line decides if "match" keyword
       $.keyword_identifier,
       $.subscript,
       $.attribute,
@@ -522,6 +562,14 @@ module.exports = grammar({
       choice($.identifier, $.keyword_identifier, $.subscript, $.attribute)
     ),
 
+    // Extended patterns (patterns allowed in match statement are far more flexible than simple patterns though still a subset of "expression")
+
+    as_pattern: $ => prec.left(seq(
+      $.expression,
+      'as',
+      field('alias', alias($.expression, $.as_pattern_target))
+    )),
+
     // Expressions
 
     _expression_within_for_in_clause: $ => choice(
@@ -537,12 +585,14 @@ module.exports = grammar({
       $.lambda,
       $.primary_expression,
       $.conditional_expression,
-      $.named_expression
+      $.named_expression,
+      $.as_pattern
     ),
 
     primary_expression: $ => choice(
       $.binary_operator,
       $.identifier,
+      alias("match", $.identifier),
       $.keyword_identifier,
       $.string,
       $.concatenated_string,
@@ -631,8 +681,8 @@ module.exports = grammar({
             'is',
             seq('is', 'not')
           )),
-          $.primary_expression
-        ))
+        $.primary_expression
+      ))
     )),
 
     lambda: $ => prec(PREC.lambda, seq(
@@ -669,7 +719,7 @@ module.exports = grammar({
 
     _left_hand_side: $ => choice(
       $.pattern,
-      $.pattern_list
+      $.pattern_list,
     ),
 
     pattern_list: $ => seq(
@@ -749,7 +799,7 @@ module.exports = grammar({
     type: $ => $.expression,
 
     keyword_argument: $ => seq(
-      field('name', choice($.identifier, $.keyword_identifier)),
+      field('name', choice($.identifier, $.keyword_identifier, alias("match", $.identifier))),
       '=',
       field('value', $.expression)
     ),
@@ -872,6 +922,7 @@ module.exports = grammar({
     interpolation: $ => seq(
       '{',
       $.expression,
+      optional('='),
       optional($.type_conversion),
       optional($.format_specifier),
       '}'
@@ -966,13 +1017,16 @@ module.exports = grammar({
     )),
 
     comment: $ => token(seq('#', /.*/)),
+
+    positional_separator: $ => '/',
+    keyword_separator: $ => '*',
   }
 })
 
-function commaSep1 (rule) {
+function commaSep1(rule) {
   return sep1(rule, ',')
 }
 
-function sep1 (rule, separator) {
+function sep1(rule, separator) {
   return seq(rule, repeat(seq(separator, rule)))
 }
