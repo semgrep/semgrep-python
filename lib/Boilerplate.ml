@@ -61,7 +61,7 @@ let map_escape_interpolation (env : env) (x : CST.escape_interpolation) =
   )
 
 let map_identifier (env : env) (tok : CST.identifier) =
-  (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
+  (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
 
 let map_float_ (env : env) (tok : CST.float_) =
   (* float *) token env tok
@@ -86,13 +86,13 @@ let map_indent (env : env) (tok : CST.indent) =
 
 let map_dotted_name (env : env) ((v1, v2) : CST.dotted_name) =
   let v1 =
-    (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v1
+    (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v1
   in
   let v2 =
     R.List (List.map (fun (v1, v2) ->
       let v1 = (* "." *) token env v1 in
       let v2 =
-        (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
+        (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
       in
       R.Tuple [v1; v2]
     ) v2)
@@ -102,7 +102,7 @@ let map_dotted_name (env : env) ((v1, v2) : CST.dotted_name) =
 let map_named_expresssion_lhs (env : env) (x : CST.named_expresssion_lhs) =
   (match x with
   | `Id tok -> R.Case ("Id",
-      (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
+      (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
     )
   | `Match tok -> R.Case ("Match",
       (* "match" *) token env tok
@@ -123,7 +123,7 @@ let map_relative_import (env : env) ((v1, v2) : CST.relative_import) =
 let rec map_anon_choice_id_b80cb38 (env : env) (x : CST.anon_choice_id_b80cb38) =
   (match x with
   | `Id tok -> R.Case ("Id",
-      (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
+      (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
     )
   | `Choice_print x -> R.Case ("Choice_print",
       map_keyword_identifier env x
@@ -220,7 +220,7 @@ and map_anon_choice_type_aad5b2d (env : env) (x : CST.anon_choice_type_aad5b2d) 
       let v1 =
         (match v1 with
         | `Id tok -> R.Case ("Id",
-            (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
+            (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
           )
         | `Choice_print x -> R.Case ("Choice_print",
             map_keyword_identifier env x
@@ -267,7 +267,7 @@ and map_attribute (env : env) ((v1, v2, v3) : CST.attribute) =
   let v1 = map_primary_expression env v1 in
   let v2 = (* "." *) token env v2 in
   let v3 =
-    (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v3
+    (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v3
   in
   R.Tuple [v1; v2; v3]
 
@@ -721,13 +721,13 @@ and map_pair (env : env) ((v1, v2, v3) : CST.pair) =
 and map_parameter (env : env) (x : CST.parameter) =
   (match x with
   | `Id tok -> R.Case ("Id",
-      (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
+      (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
     )
   | `Typed_param (v1, v2, v3) -> R.Case ("Typed_param",
       let v1 =
         (match v1 with
         | `Id tok -> R.Case ("Id",
-            (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
+            (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
           )
         | `List_splat_pat x -> R.Case ("List_splat_pat",
             map_list_splat_pattern env x
@@ -743,7 +743,7 @@ and map_parameter (env : env) (x : CST.parameter) =
     )
   | `Defa_param (v1, v2, v3) -> R.Case ("Defa_param",
       let v1 =
-        (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v1
+        (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v1
       in
       let v2 = (* "=" *) token env v2 in
       let v3 = map_type_ env v3 in
@@ -751,7 +751,7 @@ and map_parameter (env : env) (x : CST.parameter) =
     )
   | `Typed_defa_param (v1, v2, v3, v4, v5) -> R.Case ("Typed_defa_param",
       let v1 =
-        (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v1
+        (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v1
       in
       let v2 = (* ":" *) token env v2 in
       let v3 = map_type_ env v3 in
@@ -812,7 +812,7 @@ and map_parenthesized_list_splat (env : env) ((v1, v2, v3) : CST.parenthesized_l
 and map_pattern (env : env) (x : CST.pattern) =
   (match x with
   | `Id tok -> R.Case ("Id",
-      (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
+      (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
     )
   | `Match tok -> R.Case ("Match",
       (* "match" *) token env tok
@@ -870,7 +870,7 @@ and map_primary_expression (env : env) (x : CST.primary_expression) =
       map_binary_operator env x
     )
   | `Id tok -> R.Case ("Id",
-      (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
+      (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
     )
   | `Match tok -> R.Case ("Match",
       (* "match" *) token env tok
@@ -1130,7 +1130,7 @@ let map_anon_choice_dotted_name_c5c573a (env : env) (x : CST.anon_choice_dotted_
       let v1 = map_dotted_name env v1 in
       let v2 = (* "as" *) token env v2 in
       let v3 =
-        (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v3
+        (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v3
       in
       R.Tuple [v1; v2; v3]
     )
@@ -1509,13 +1509,13 @@ let map_simple_statement (env : env) (x : CST.simple_statement) =
   | `Global_stmt (v1, v2, v3) -> R.Case ("Global_stmt",
       let v1 = (* "global" *) token env v1 in
       let v2 =
-        (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
+        (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
       in
       let v3 =
         R.List (List.map (fun (v1, v2) ->
           let v1 = (* "," *) token env v1 in
           let v2 =
-            (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
+            (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
           in
           R.Tuple [v1; v2]
         ) v3)
@@ -1525,13 +1525,13 @@ let map_simple_statement (env : env) (x : CST.simple_statement) =
   | `Nonl_stmt (v1, v2, v3) -> R.Case ("Nonl_stmt",
       let v1 = (* "nonlocal" *) token env v1 in
       let v2 =
-        (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
+        (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
       in
       let v3 =
         R.List (List.map (fun (v1, v2) ->
           let v1 = (* "," *) token env v1 in
           let v2 =
-            (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
+            (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
           in
           R.Tuple [v1; v2]
         ) v3)
@@ -1616,7 +1616,7 @@ and map_case_clause (env : env) ((v1, v2, v3, v4, v5, v6, v7) : CST.case_clause)
 and map_class_definition (env : env) ((v1, v2, v3, v4, v5) : CST.class_definition) =
   let v1 = (* "class" *) token env v1 in
   let v2 =
-    (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
+    (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v2
   in
   let v3 =
     (match v3 with
@@ -1832,7 +1832,7 @@ and map_function_definition (env : env) ((v1, v2, v3, v4, v5, v6, v7) : CST.func
   in
   let v2 = (* "def" *) token env v2 in
   let v3 =
-    (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *) token env v3
+    (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v3
   in
   let v4 = map_parameters env v4 in
   let v5 =

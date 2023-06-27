@@ -30,7 +30,8 @@ type escape_interpolation = [
   | `RCURLRCURL of Token.t (* "}}" *)
 ]
 
-type identifier = Token.t (* pattern [_\p{XID_Start}][_\p{XID_Continue}]* *)
+type identifier =
+  Token.t (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *)
 
 type float_ = Token.t
 
