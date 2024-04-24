@@ -20,11 +20,11 @@ Last change in file:
 ---
 File: semgrep-grammars/src/semgrep-python/grammar.js
 Git repo name: ocaml-tree-sitter-semgrep
-Latest commit in repo: c9a8bca714137c43f8aede5ed2215193d53defc9
+Latest commit in repo: 89306c767617a6eeb948fa1b442b9cd23107800d
 Last change in file:
-  commit d07239c97ebfec5480eb223fd72b3b3b725e683c
-  Author: Sophia Roshal <SophiaSR@users.noreply.github.com>
-  Date:   Tue Jun 27 11:57:04 2023 -0700
+  commit 89306c767617a6eeb948fa1b442b9cd23107800d
+  Author: brandonspark <wu.brandonj@gmail.com>
+  Date:   Wed Apr 24 14:47:43 2024 -0700
   
-      Adding support for metavariables for python to move towards parsing patterns via tree-sitter  (#422)
+      feat: augment python grammar with semgrep stuff
 ---
