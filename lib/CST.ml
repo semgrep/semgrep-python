@@ -8,9 +8,11 @@
 open! Sexplib.Conv
 open Tree_sitter_run
 
+type tok_prec_p1_pat_a2d1fce = Token.t
+
 type string_start = Token.t
 
-type string_end = Token.t
+type type_conversion = Token.t (* pattern ![a-z] *)
 
 type integer = Token.t
 
@@ -23,9 +25,6 @@ type keyword_identifier = [
 
 type dedent = Token.t
 
-type semgrep_ellipsis_metavar =
-  Token.t (* pattern \$\.\.\.[a-zA-Z_][a-zA-Z_0-9]* *)
-
 type escape_interpolation = [
     `LCURLLCURL of Token.t (* "{{" *)
   | `RCURLRCURL of Token.t (* "}}" *)
@@ -36,17 +35,15 @@ type identifier =
 
 type float_ = Token.t
 
-type tok_prec_p1_pat_a2d1fce = Token.t
-
 type escape_sequence = Token.t
 
 type import_prefix = Token.t (* "." *) list (* one or more *)
 
 type newline = Token.t
 
-type string_content = Token.t
+type string_end = Token.t
 
-type type_conversion = Token.t (* pattern ![a-z] *)
+type string_content = Token.t
 
 type indent = Token.t
 
@@ -119,19 +116,7 @@ and argument_list = (
   * Token.t (* ")" *)
 )
 
-and attribute = [
-    `Prim_exp_DOT_id of (
-        primary_expression * Token.t (* "." *) * identifier (*tok*)
-    )
-  | `Prim_exp_DOT_choice_DOTDOTDOT of (
-        primary_expression
-      * Token.t (* "." *)
-      * [
-            `DOTDOTDOT of Token.t (* "..." *)
-          | `Semg_ellips_meta of semgrep_ellipsis_metavar (*tok*)
-        ]
-    )
-]
+and attribute = (primary_expression * Token.t (* "." *) * identifier (*tok*))
 
 and binary_operator = [
     `Prim_exp_PLUS_prim_exp of (
@@ -192,8 +177,6 @@ and comprehension_clauses = (
       list (* zero or more *)
 )
 
-and default_parameter = (identifier (*tok*) * Token.t (* "=" *) * type_)
-
 and dictionary_splat = (Token.t (* "**" *) * type_)
 
 and dictionary_splat_pattern = (Token.t (* "**" *) * anon_choice_id_b80cb38)
@@ -234,12 +217,6 @@ and expression = [
     )
   | `Named_exp of (named_expresssion_lhs * Token.t (* ":=" *) * type_)
   | `As_pat of (type_ * Token.t (* "as" *) * type_)
-  | `Semg_deep_exp of (Token.t (* "<..." *) * type_ * Token.t (* "...>" *))
-  | `Semg_typed_meta of (
-        Token.t (* "(" *) * identifier (*tok*) * Token.t (* ":" *) * type_
-      * Token.t (* ")" *)
-    )
-  | `Semg_ellips_meta of semgrep_ellipsis_metavar (*tok*)
 ]
 
 and expression_list = (
@@ -322,26 +299,29 @@ and list_splat = (Token.t (* "*" *) * type_)
 
 and list_splat_pattern = (Token.t (* "*" *) * anon_choice_id_b80cb38)
 
-and pair = [
-    `Exp_COLON_exp of (type_ * Token.t (* ":" *) * type_)
-  | `DOTDOTDOT of Token.t (* "..." *)
-  | `Semg_ellips_meta of semgrep_ellipsis_metavar (*tok*)
-]
+and pair = (type_ * Token.t (* ":" *) * type_)
 
 and parameter = [
-    `Choice_id of [
-        `Id of identifier (*tok*)
-      | `Typed_param of typed_parameter
-      | `Defa_param of default_parameter
-      | `Typed_defa_param of typed_default_parameter
-      | `List_splat_pat of list_splat_pattern
-      | `Tuple_pat of tuple_pattern
-      | `Kw_sepa of Token.t (* "*" *)
-      | `Posi_sepa of Token.t (* "/" *)
-      | `Dict_splat_pat of dictionary_splat_pattern
-    ]
-  | `DOTDOTDOT of Token.t (* "..." *)
-  | `Semg_ellips_meta of semgrep_ellipsis_metavar (*tok*)
+    `Id of identifier (*tok*)
+  | `Typed_param of (
+        [
+            `Id of identifier (*tok*)
+          | `List_splat_pat of list_splat_pattern
+          | `Dict_splat_pat of dictionary_splat_pattern
+        ]
+      * Token.t (* ":" *)
+      * type_
+    )
+  | `Defa_param of (identifier (*tok*) * Token.t (* "=" *) * type_)
+  | `Typed_defa_param of (
+        identifier (*tok*) * Token.t (* ":" *) * type_ * Token.t (* "=" *)
+      * type_
+    )
+  | `List_splat_pat of list_splat_pattern
+  | `Tuple_pat of tuple_pattern
+  | `Kw_sepa of Token.t (* "*" *)
+  | `Posi_sepa of Token.t (* "/" *)
+  | `Dict_splat_pat of dictionary_splat_pattern
 ]
 
 and parameters_ = (
@@ -468,21 +448,6 @@ and tuple_pattern = (Token.t (* "(" *) * patterns option * Token.t (* ")" *))
 
 and type_ = expression
 
-and typed_default_parameter = (
-    identifier (*tok*) * Token.t (* ":" *) * type_ * Token.t (* "=" *)
-  * type_
-)
-
-and typed_parameter = (
-    [
-        `Id of identifier (*tok*)
-      | `List_splat_pat of list_splat_pattern
-      | `Dict_splat_pat of dictionary_splat_pattern
-    ]
-  * Token.t (* ":" *)
-  * type_
-)
-
 and yield = (
     Token.t (* "yield" *)
   * [
@@ -496,8 +461,6 @@ type anon_choice_dotted_name_c5c573a = [
   | `Alia_import of (dotted_name * Token.t (* "as" *) * identifier (*tok*))
 ]
 
-type with_item = type_
-
 type chevron = (Token.t (* ">>" *) * type_)
 
 type anon_choice_type_756d23d = [
@@ -506,6 +469,8 @@ type anon_choice_type_756d23d = [
 ]
 
 type decorator = (Token.t (* "@" *) * primary_expression * newline (*tok*))
+
+type with_item = type_
 
 type parameters = (
     Token.t (* "(" *)
@@ -559,19 +524,6 @@ type import_list = (
   * Token.t (* "," *) option
 )
 
-type with_clause = [
-    `With_item_rep_COMMA_with_item of (
-        with_item
-      * (Token.t (* "," *) * with_item) list (* zero or more *)
-    )
-  | `LPAR_with_item_rep_COMMA_with_item_RPAR of (
-        Token.t (* "(" *)
-      * with_item
-      * (Token.t (* "," *) * with_item) list (* zero or more *)
-      * Token.t (* ")" *)
-    )
-]
-
 type print_statement = [
     `Print_chev_rep_COMMA_exp_opt_COMMA of (
         Token.t (* "print" *)
@@ -584,6 +536,19 @@ type print_statement = [
       * type_
       * (Token.t (* "," *) * type_) list (* zero or more *)
       * Token.t (* "," *) option
+    )
+]
+
+type with_clause = [
+    `With_item_rep_COMMA_with_item of (
+        with_item
+      * (Token.t (* "," *) * with_item) list (* zero or more *)
+    )
+  | `LPAR_with_item_rep_COMMA_with_item_RPAR of (
+        Token.t (* "(" *)
+      * with_item
+      * (Token.t (* "," *) * with_item) list (* zero or more *)
+      * Token.t (* ")" *)
     )
 ]
 
@@ -788,7 +753,6 @@ and module_ = statement list (* zero or more *)
 and statement = [
     `Simple_stmts of simple_statements
   | `Choice_if_stmt of compound_statement
-  | `Semg_ellips_meta of semgrep_ellipsis_metavar (*tok*)
 ]
 
 and suite = [
@@ -797,17 +761,17 @@ and suite = [
   | `Nl of newline (*tok*)
 ]
 
-type true_ (* inlined *) = Token.t (* "True" *)
-
 type ellipsis (* inlined *) = Token.t (* "..." *)
 
-type wildcard_import (* inlined *) = Token.t (* "*" *)
-
 type comment (* inlined *) = Token.t
+
+type true_ (* inlined *) = Token.t (* "True" *)
 
 type keyword_separator (* inlined *) = Token.t (* "*" *)
 
 type positional_separator (* inlined *) = Token.t (* "/" *)
+
+type wildcard_import (* inlined *) = Token.t (* "*" *)
 
 type not_escape_sequence (* inlined *) = Token.t (* "\\" *)
 
@@ -874,6 +838,10 @@ type concatenated_string (* inlined *) = (
 
 type conditional_expression (* inlined *) = (
     type_ * Token.t (* "if" *) * type_ * Token.t (* "else" *) * type_
+)
+
+type default_parameter (* inlined *) = (
+    identifier (*tok*) * Token.t (* "=" *) * type_
 )
 
 type dictionary (* inlined *) = (
@@ -955,15 +923,6 @@ type pattern_list (* inlined *) = (
     ]
 )
 
-type semgrep_deep_expression (* inlined *) = (
-    Token.t (* "<..." *) * type_ * Token.t (* "...>" *)
-)
-
-type semgrep_typed_metavar (* inlined *) = (
-    Token.t (* "(" *) * identifier (*tok*) * Token.t (* ":" *) * type_
-  * Token.t (* ")" *)
-)
-
 type set (* inlined *) = (
     Token.t (* "{" *) * collection_elements * Token.t (* "}" *)
 )
@@ -983,6 +942,21 @@ type tuple (* inlined *) = (
     Token.t (* "(" *)
   * collection_elements option
   * Token.t (* ")" *)
+)
+
+type typed_default_parameter (* inlined *) = (
+    identifier (*tok*) * Token.t (* ":" *) * type_ * Token.t (* "=" *)
+  * type_
+)
+
+type typed_parameter (* inlined *) = (
+    [
+        `Id of identifier (*tok*)
+      | `List_splat_pat of list_splat_pattern
+      | `Dict_splat_pat of dictionary_splat_pattern
+    ]
+  * Token.t (* ":" *)
+  * type_
 )
 
 type unary_operator (* inlined *) = (
@@ -1114,3 +1088,7 @@ type with_statement (* inlined *) = (
   * Token.t (* ":" *)
   * suite
 )
+
+type extra = Comment of Loc.t * comment
+
+type extras = extra list
