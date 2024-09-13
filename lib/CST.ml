@@ -1089,6 +1089,6 @@ type with_statement (* inlined *) = (
   * suite
 )
 
-type extra = Comment of Loc.t * comment
+type extra = [ `Comment of Loc.t * comment ]
 
 type extras = extra list
