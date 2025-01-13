@@ -1,6 +1,6 @@
 File: semgrep-grammars/src/tree-sitter-python/LICENSE
 Git repo name: tree-sitter-python
-Latest commit in repo: de221eccf9a221f5b85474a553474a69b4b5784d
+Latest commit in repo: 409b5d671eb0ea4972eeacaaca24bbec1acf79b1
 Last change in file:
   commit eb7313534683093b9ae7811991561131d6824828
   Author: Max Brunsfeld <maxbrunsfeld@gmail.com>
@@ -10,17 +10,17 @@ Last change in file:
 ---
 File: semgrep-grammars/src/tree-sitter-python/grammar.js
 Git repo name: tree-sitter-python
-Latest commit in repo: de221eccf9a221f5b85474a553474a69b4b5784d
+Latest commit in repo: 409b5d671eb0ea4972eeacaaca24bbec1acf79b1
 Last change in file:
-  commit 188b6b062d8cb256e7dfe76b5ad5089bbdcb7014
-  Author: Max Brunsfeld <maxbrunsfeld@gmail.com>
-  Date:   Fri Jun 24 18:47:17 2022 -0700
+  commit 9885368e8aa00e2fd6c6f2d28c4a9a7092140444
+  Author: Amaan Qureshi <amaanq12@gmail.com>
+  Date:   Sun Dec 22 17:57:39 2024 -0500
   
-      Ensure dedent tokens are returned even amid syntax errors
+      feat: add fields in `except_clause`
 ---
 File: semgrep-grammars/src/semgrep-python/grammar.js
 Git repo name: ocaml-tree-sitter-semgrep
-Latest commit in repo: 62c59803ce966ac00210b5ed8aa163a926f7eaad
+Latest commit in repo: 507f6e1003268f514ab24f43067ea9c00040a6e4
 Last change in file:
   commit d07239c97ebfec5480eb223fd72b3b3b725e683c
   Author: Sophia Roshal <SophiaSR@users.noreply.github.com>
