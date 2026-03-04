@@ -251,7 +251,10 @@ let children_regexps : (string * Run.exp option) list = [
     Seq [
       Token (Name "primary_expression");
       Token (Literal ".");
-      Token (Name "identifier");
+      Alt [|
+        Token (Name "identifier");
+        Token (Literal "...");
+      |];
     ];
   );
   "await",
@@ -2601,7 +2604,17 @@ and trans_attribute ((kind, body) : mt) : CST.attribute =
           (
             trans_primary_expression (Run.matcher_token v0),
             Run.trans_token (Run.matcher_token v1),
-            trans_identifier (Run.matcher_token v2)
+            (match v2 with
+            | Alt (0, v) ->
+                `Id (
+                  trans_identifier (Run.matcher_token v)
+                )
+            | Alt (1, v) ->
+                `DOTDOTDOT (
+                  Run.trans_token (Run.matcher_token v)
+                )
+            | _ -> assert false
+            )
           )
       | _ -> assert false
       )

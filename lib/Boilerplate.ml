@@ -324,7 +324,14 @@ and map_attribute (env : env) ((v1, v2, v3) : CST.attribute) =
   let v1 = map_primary_expression env v1 in
   let v2 = (* "." *) token env v2 in
   let v3 =
-    (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env v3
+    (match v3 with
+    | `Id tok -> R.Case ("Id",
+        (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *) token env tok
+      )
+    | `DOTDOTDOT tok -> R.Case ("DOTDOTDOT",
+        (* "..." *) token env tok
+      )
+    )
   in
   R.Tuple [v1; v2; v3]
 

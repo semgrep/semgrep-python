@@ -138,7 +138,11 @@ and argument_list = (
   * Token.t (* ")" *)
 )
 
-and attribute = (primary_expression * Token.t (* "." *) * identifier (*tok*))
+and attribute = (
+    primary_expression
+  * Token.t (* "." *)
+  * [ `Id of identifier (*tok*) | `DOTDOTDOT of Token.t (* "..." *) ]
+)
 
 and binary_operator = [
     `Prim_exp_PLUS_prim_exp of (
