@@ -8,32 +8,34 @@
 open! Sexplib.Conv
 open Tree_sitter_run
 
-type import_prefix = Token.t (* "." *) list (* one or more *)
+type semgrep_ellipsis_metavar = Token.t
 
-type type_conversion = Token.t (* pattern ![a-z] *)
+type import_prefix = Token.t (* "." *) list (* one or more *)
 
 type dedent = Token.t
 
-type string_content_ = Token.t
-
 type float_ = Token.t
-
-type string_end = Token.t
 
 type escape_interpolation = Token.t
 
 type indent = Token.t
 
-type tok_prec_p1_pat_a2d1fce = Token.t
+type string_start = Token.t
+
+type string_end = Token.t
 
 type identifier =
   Token.t (* pattern \$?[_\p{XID_Start}][_\p{XID_Continue}]* *)
 
-type string_start = Token.t
+type tok_prec_p1_pat_a2d1fce = Token.t
+
+type string_content_ = Token.t
 
 type is_not = (Token.t (* "is" *) * Token.t (* "not" *))
 
 type integer = Token.t
+
+type type_conversion = Token.t (* pattern ![a-z] *)
 
 type newline = Token.t
 
@@ -122,9 +124,10 @@ and anon_choice_id_9e93682 = [
   | `Attr of attribute
 ]
 
-and anon_choice_pair_002ffed = [
+and anon_choice_pair_a7b6116 = [
     `Pair of pair
   | `Dict_splat of dictionary_splat
+  | `Semg_ellips of Token.t (* "..." *)
 ]
 
 and argument_list = (
@@ -324,7 +327,8 @@ and list_splat_pattern = (Token.t (* "*" *) * anon_choice_id_9e93682)
 and pair = (expression * Token.t (* ":" *) * expression)
 
 and parameter = [
-    `Id of identifier (*tok*)
+    `Semg_ellips of Token.t (* "..." *)
+  | `Id of identifier (*tok*)
   | `Typed_param of (
         [
             `Id of identifier (*tok*)
@@ -393,7 +397,12 @@ and patterns = (
 )
 
 and primary_expression = [
-    `Await of (Token.t (* "await" *) * primary_expression)
+    `Semg_ellips_meta of semgrep_ellipsis_metavar (*tok*)
+  | `Typed_meta of (
+        Token.t (* "(" *) * identifier (*tok*) * Token.t (* ":" *) * type_
+      * Token.t (* ")" *)
+    )
+  | `Await of (Token.t (* "await" *) * primary_expression)
   | `Bin_op of binary_operator
   | `Id of identifier (*tok*)
   | `Choice_choice_print of keyword_identifier
@@ -430,8 +439,8 @@ and primary_expression = [
   | `Dict of (
         Token.t (* "{" *)
       * (
-            anon_choice_pair_002ffed
-          * (Token.t (* "," *) * anon_choice_pair_002ffed)
+            anon_choice_pair_a7b6116
+          * (Token.t (* "," *) * anon_choice_pair_a7b6116)
               list (* zero or more *)
         )
           option
@@ -530,7 +539,8 @@ and anon_choice_key_value_pat_9cde426 = [
 ]
 
 and case_pattern = [
-    `As_pat of (case_pattern * Token.t (* "as" *) * identifier (*tok*))
+    `Semg_ellips of Token.t (* "..." *)
+  | `As_pat of (case_pattern * Token.t (* "as" *) * identifier (*tok*))
   | `Kw_pat of (identifier (*tok*) * Token.t (* "=" *) * simple_pattern)
   | `Simple_pat of simple_pattern
 ]
@@ -917,6 +927,8 @@ and suite = [
 
 type ellipsis (* inlined *) = Token.t (* "..." *)
 
+type true_ (* inlined *) = Token.t (* "True" *)
+
 type pass_statement (* inlined *) = Token.t (* "pass" *)
 
 type false_ (* inlined *) = Token.t (* "False" *)
@@ -929,11 +941,11 @@ type break_statement (* inlined *) = Token.t (* "break" *)
 
 type continue_statement (* inlined *) = Token.t (* "continue" *)
 
-type wildcard_import (* inlined *) = Token.t (* "*" *)
+type semgrep_ellipsis (* inlined *) = Token.t (* "..." *)
 
 type none (* inlined *) = Token.t (* "None" *)
 
-type true_ (* inlined *) = Token.t (* "True" *)
+type wildcard_import (* inlined *) = Token.t (* "*" *)
 
 type line_continuation (* inlined *) = Token.t
 
@@ -1016,8 +1028,8 @@ type default_parameter (* inlined *) = (
 type dictionary (* inlined *) = (
     Token.t (* "{" *)
   * (
-        anon_choice_pair_002ffed
-      * (Token.t (* "," *) * anon_choice_pair_002ffed)
+        anon_choice_pair_a7b6116
+      * (Token.t (* "," *) * anon_choice_pair_a7b6116)
           list (* zero or more *)
     )
       option
@@ -1112,6 +1124,11 @@ type typed_default_parameter (* inlined *) = (
   * expression
 )
 
+type typed_metavar (* inlined *) = (
+    Token.t (* "(" *) * identifier (*tok*) * Token.t (* ":" *) * type_
+  * Token.t (* ")" *)
+)
+
 type typed_parameter (* inlined *) = (
     [
         `Id of identifier (*tok*)
@@ -1199,14 +1216,14 @@ type exec_statement (* inlined *) = (
       option
 )
 
+type type_alias_statement (* inlined *) = (
+    Token.t (* "type" *) * type_ * Token.t (* "=" *) * type_
+)
+
 type assert_statement (* inlined *) = (
     Token.t (* "assert" *)
   * expression
   * (Token.t (* "," *) * expression) list (* zero or more *)
-)
-
-type type_alias_statement (* inlined *) = (
-    Token.t (* "type" *) * type_ * Token.t (* "=" *) * type_
 )
 
 type raise_statement (* inlined *) = (
