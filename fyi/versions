@@ -20,20 +20,18 @@ Last change in file:
 ---
 File: semgrep-grammars/src/semgrep-python/grammar.js
 Git repo name: ocaml-tree-sitter-semgrep
-Latest commit in repo: 58a4c3c46ea65e6208fc2a74143dc87bd4261f08
+Latest commit in repo: cbc378c3e6f8446ab9988ff2f6a04a374dcb4068
 Last change in file:
-  commit 58a4c3c46ea65e6208fc2a74143dc87bd4261f08
-  Author: brandonspark <wu.brandonj@gmail.com>
-  Date:   Tue Mar 3 16:12:17 2026 -0800
+  commit cbc378c3e6f8446ab9988ff2f6a04a374dcb4068
+  Author: brandonspark <brandon@semgrep.com>
+  Date:   Thu Apr 30 11:41:10 2026 -0700
   
-      feat(python): support ellipsis in dot-access chain patterns
+      feat(python): pattern-parser augmentations for menhir-removal blockers (LANG-505)
       
-      Override the `attribute` rule to accept `'...'` as an alternative to
-      `identifier` in the attribute field. This lets semgrep patterns like
-      `a. ... .d` parse correctly for matching call chains, matching the
-      existing Java `field_access` behavior.
+      - Standalone decorators (@$X) — make decorated_definition body optional
+      - Typed metavariables in call args (foo($X : int))
+      - Comprehension ellipsis ([... for ... in ...])
+      - Deep expression ellipsis (<... expr ...>) — surprisingly works in grammar.js without scanner work, supersedes LANG-462's scanner-level assumption
       
-      Fixes https://github.com/semgrep/semgrep/issues/11545
-      
-      Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+      Adds 4 grammar rules + 8 corpus tests; 124 of 124 tests pass.
 ---
