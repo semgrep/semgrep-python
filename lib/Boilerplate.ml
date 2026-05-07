@@ -22,9 +22,6 @@ let blank (env : env) () =
 let map_import_prefix (env : env) (xs : CST.import_prefix) =
   R.List (List.map (token env (* "." *)) xs)
 
-let map_type_conversion (env : env) (tok : CST.type_conversion) =
-  (* pattern ![a-z] *) token env tok
-
 let map_dedent (env : env) (tok : CST.dedent) =
   (* dedent *) token env tok
 
@@ -43,6 +40,9 @@ let map_escape_interpolation (env : env) (tok : CST.escape_interpolation) =
 let map_indent (env : env) (tok : CST.indent) =
   (* indent *) token env tok
 
+let map_tok_prec_p1_star (env : env) (tok : CST.tok_prec_p1_star) =
+  (* tok_prec_p1_star *) token env tok
+
 let map_tok_prec_p1_pat_a2d1fce (env : env) (tok : CST.tok_prec_p1_pat_a2d1fce) =
   (* tok_prec_p1_pat_a2d1fce *) token env tok
 
@@ -59,6 +59,9 @@ let map_is_not (env : env) ((v1, v2) : CST.is_not) =
 
 let map_integer (env : env) (tok : CST.integer) =
   (* integer *) token env tok
+
+let map_type_conversion (env : env) (tok : CST.type_conversion) =
+  (* pattern ![a-z] *) token env tok
 
 let map_newline (env : env) (tok : CST.newline) =
   (* newline *) token env tok
@@ -1690,19 +1693,28 @@ let map_expression_statement (env : env) (x : CST.expression_statement) =
   | `Exp x -> R.Case ("Exp",
       map_expression env x
     )
-  | `Exp_rep_COMMA_exp_opt_COMMA (v1, v2, v3) -> R.Case ("Exp_rep_COMMA_exp_opt_COMMA",
+  | `Tuple_exp (v1, v2, v3) -> R.Case ("Tuple_exp",
       let v1 = map_expression env v1 in
-      let v2 =
-        R.List (List.map (fun (v1, v2) ->
-          let v1 = (* "," *) token env v1 in
-          let v2 = map_expression env v2 in
-          R.Tuple [v1; v2]
-        ) v2)
-      in
+      let v2 = (* "," *) token env v2 in
       let v3 =
         (match v3 with
-        | Some tok -> R.Option (Some (
-            (* "," *) token env tok
+        | Some (v1, v2, v3) -> R.Option (Some (
+            let v1 = map_expression env v1 in
+            let v2 =
+              R.List (List.map (fun (v1, v2) ->
+                let v1 = (* "," *) token env v1 in
+                let v2 = map_expression env v2 in
+                R.Tuple [v1; v2]
+              ) v2)
+            in
+            let v3 =
+              (match v3 with
+              | Some tok -> R.Option (Some (
+                  (* "," *) token env tok
+                ))
+              | None -> R.Option None)
+            in
+            R.Tuple [v1; v2; v3]
           ))
         | None -> R.Option None)
       in
@@ -2039,56 +2051,26 @@ and map_compound_statement (env : env) (x : CST.compound_statement) =
       in
       R.Tuple [v1; v2; v3; v4; v5]
     )
-  | `Try_stmt (v1, v2, v3, v4) -> R.Case ("Try_stmt",
+  | `Try_stmt (v1, v2, v3, v4, v5, v6) -> R.Case ("Try_stmt",
       let v1 = (* "try" *) token env v1 in
       let v2 = (* ":" *) token env v2 in
       let v3 = map_suite env v3 in
-      let v4 =
-        (match v4 with
-        | `Rep1_except_clause_opt_else_clause_opt_fina_clause (v1, v2, v3) -> R.Case ("Rep1_except_clause_opt_else_clause_opt_fina_clause",
-            let v1 = R.List (List.map (map_except_clause env) v1) in
-            let v2 =
-              (match v2 with
-              | Some x -> R.Option (Some (
-                  map_else_clause env x
-                ))
-              | None -> R.Option None)
-            in
-            let v3 =
-              (match v3 with
-              | Some x -> R.Option (Some (
-                  map_finally_clause env x
-                ))
-              | None -> R.Option None)
-            in
-            R.Tuple [v1; v2; v3]
-          )
-        | `Rep1_except_group_clause_opt_else_clause_opt_fina_clause (v1, v2, v3) -> R.Case ("Rep1_except_group_clause_opt_else_clause_opt_fina_clause",
-            let v1 =
-              R.List (List.map (map_except_group_clause env) v1)
-            in
-            let v2 =
-              (match v2 with
-              | Some x -> R.Option (Some (
-                  map_else_clause env x
-                ))
-              | None -> R.Option None)
-            in
-            let v3 =
-              (match v3 with
-              | Some x -> R.Option (Some (
-                  map_finally_clause env x
-                ))
-              | None -> R.Option None)
-            in
-            R.Tuple [v1; v2; v3]
-          )
-        | `Fina_clause x -> R.Case ("Fina_clause",
-            map_finally_clause env x
-          )
-        )
+      let v4 = R.List (List.map (map_except_clause env) v4) in
+      let v5 =
+        (match v5 with
+        | Some x -> R.Option (Some (
+            map_else_clause env x
+          ))
+        | None -> R.Option None)
       in
-      R.Tuple [v1; v2; v3; v4]
+      let v6 =
+        (match v6 with
+        | Some x -> R.Option (Some (
+            map_finally_clause env x
+          ))
+        | None -> R.Option None)
+      in
+      R.Tuple [v1; v2; v3; v4; v5; v6]
     )
   | `With_stmt (v1, v2, v3, v4, v5) -> R.Case ("With_stmt",
       let v1 =
@@ -2160,47 +2142,44 @@ and map_else_clause (env : env) ((v1, v2, v3) : CST.else_clause) =
   let v3 = map_suite env v3 in
   R.Tuple [v1; v2; v3]
 
-and map_except_clause (env : env) ((v1, v2, v3, v4) : CST.except_clause) =
+and map_except_clause (env : env) ((v1, v2, v3, v4, v5) : CST.except_clause) =
   let v1 = (* "except" *) token env v1 in
   let v2 =
     (match v2 with
-    | Some (v1, v2) -> R.Option (Some (
-        let v1 = map_expression env v1 in
-        let v2 =
-          (match v2 with
-          | Some (v1, v2) -> R.Option (Some (
-              let v1 =
-                (match v1 with
-                | `As tok -> R.Case ("As",
-                    (* "as" *) token env tok
-                  )
-                | `COMMA tok -> R.Case ("COMMA",
-                    (* "," *) token env tok
-                  )
-                )
-              in
-              let v2 = map_expression env v2 in
-              R.Tuple [v1; v2]
-            ))
-          | None -> R.Option None)
-        in
-        R.Tuple [v1; v2]
+    | Some x -> R.Option (Some (
+        map_tok_prec_p1_star env x
       ))
     | None -> R.Option None)
   in
-  let v3 = (* ":" *) token env v3 in
-  let v4 = map_suite env v4 in
-  R.Tuple [v1; v2; v3; v4]
-
-and map_except_group_clause (env : env) ((v1, v2, v3, v4, v5) : CST.except_group_clause) =
-  let v1 = (* "except*" *) token env v1 in
-  let v2 = map_expression env v2 in
   let v3 =
     (match v3 with
-    | Some (v1, v2) -> R.Option (Some (
-        let v1 = (* "as" *) token env v1 in
-        let v2 = map_expression env v2 in
-        R.Tuple [v1; v2]
+    | Some x -> R.Option (Some (
+        (match x with
+        | `Exp_opt_as_exp (v1, v2) -> R.Case ("Exp_opt_as_exp",
+            let v1 = map_expression env v1 in
+            let v2 =
+              (match v2 with
+              | Some (v1, v2) -> R.Option (Some (
+                  let v1 = (* "as" *) token env v1 in
+                  let v2 = map_expression env v2 in
+                  R.Tuple [v1; v2]
+                ))
+              | None -> R.Option None)
+            in
+            R.Tuple [v1; v2]
+          )
+        | `Exp_rep_COMMA_exp (v1, v2) -> R.Case ("Exp_rep_COMMA_exp",
+            let v1 = map_expression env v1 in
+            let v2 =
+              R.List (List.map (fun (v1, v2) ->
+                let v1 = (* "," *) token env v1 in
+                let v2 = map_expression env v2 in
+                R.Tuple [v1; v2]
+              ) v2)
+            in
+            R.Tuple [v1; v2]
+          )
+        )
       ))
     | None -> R.Option None)
   in

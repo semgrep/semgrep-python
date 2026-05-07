@@ -10,8 +10,6 @@ open Tree_sitter_run
 
 type import_prefix = Token.t (* "." *) list (* one or more *)
 
-type type_conversion = Token.t (* pattern ![a-z] *)
-
 type dedent = Token.t
 
 type string_content_ = Token.t
@@ -24,6 +22,8 @@ type escape_interpolation = Token.t
 
 type indent = Token.t
 
+type tok_prec_p1_star = Token.t
+
 type tok_prec_p1_pat_a2d1fce = Token.t
 
 type identifier =
@@ -34,6 +34,8 @@ type string_start = Token.t
 type is_not = (Token.t (* "is" *) * Token.t (* "not" *))
 
 type integer = Token.t
+
+type type_conversion = Token.t (* pattern ![a-z] *)
 
 type newline = Token.t
 
@@ -676,10 +678,15 @@ type print_statement = [
 
 type expression_statement = [
     `Exp of expression
-  | `Exp_rep_COMMA_exp_opt_COMMA of (
+  | `Tuple_exp of (
         expression
-      * (Token.t (* "," *) * expression) list (* zero or more *)
-      * Token.t (* "," *) option
+      * Token.t (* "," *)
+      * (
+            expression
+          * (Token.t (* "," *) * expression) list (* zero or more *)
+          * Token.t (* "," *) option
+        )
+          option
     )
   | `Assign of assignment
   | `Augm_assign of augmented_assignment
@@ -811,19 +818,9 @@ and compound_statement = [
         Token.t (* "try" *)
       * Token.t (* ":" *)
       * suite
-      * [
-            `Rep1_except_clause_opt_else_clause_opt_fina_clause of (
-                except_clause list (* one or more *)
-              * else_clause option
-              * finally_clause option
-            )
-          | `Rep1_except_group_clause_opt_else_clause_opt_fina_clause of (
-                except_group_clause list (* one or more *)
-              * else_clause option
-              * finally_clause option
-            )
-          | `Fina_clause of finally_clause
-        ]
+      * except_clause list (* zero or more *)
+      * else_clause option
+      * finally_clause option
     )
   | `With_stmt of (
         Token.t (* "async" *) option
@@ -859,23 +856,18 @@ and else_clause = (Token.t (* "else" *) * Token.t (* ":" *) * suite)
 
 and except_clause = (
     Token.t (* "except" *)
-  * (
-        expression
-      * (
-            [ `As of Token.t (* "as" *) | `COMMA of Token.t (* "," *) ]
-          * expression
+  * tok_prec_p1_star (*tok*) option
+  * [
+        `Exp_opt_as_exp of (
+            expression
+          * (Token.t (* "as" *) * expression) option
         )
-          option
-    )
+      | `Exp_rep_COMMA_exp of (
+            expression
+          * (Token.t (* "," *) * expression) list (* zero or more *)
+        )
+    ]
       option
-  * Token.t (* ":" *)
-  * suite
-)
-
-and except_group_clause = (
-    Token.t (* "except*" *)
-  * expression
-  * (Token.t (* "as" *) * expression) option
   * Token.t (* ":" *)
   * suite
 )
@@ -929,11 +921,11 @@ type break_statement (* inlined *) = Token.t (* "break" *)
 
 type continue_statement (* inlined *) = Token.t (* "continue" *)
 
-type wildcard_import (* inlined *) = Token.t (* "*" *)
-
 type none (* inlined *) = Token.t (* "None" *)
 
 type true_ (* inlined *) = Token.t (* "True" *)
+
+type wildcard_import (* inlined *) = Token.t (* "*" *)
 
 type line_continuation (* inlined *) = Token.t
 
@@ -1138,6 +1130,17 @@ type return_statement (* inlined *) = (
   * expressions option
 )
 
+type tuple_expression (* inlined *) = (
+    expression
+  * Token.t (* "," *)
+  * (
+        expression
+      * (Token.t (* "," *) * expression) list (* zero or more *)
+      * Token.t (* "," *) option
+    )
+      option
+)
+
 type as_pattern (* inlined *) = (
     case_pattern * Token.t (* "as" *) * identifier (*tok*)
 )
@@ -1199,14 +1202,14 @@ type exec_statement (* inlined *) = (
       option
 )
 
+type type_alias_statement (* inlined *) = (
+    Token.t (* "type" *) * type_ * Token.t (* "=" *) * type_
+)
+
 type assert_statement (* inlined *) = (
     Token.t (* "assert" *)
   * expression
   * (Token.t (* "," *) * expression) list (* zero or more *)
-)
-
-type type_alias_statement (* inlined *) = (
-    Token.t (* "type" *) * type_ * Token.t (* "=" *) * type_
 )
 
 type raise_statement (* inlined *) = (
@@ -1280,19 +1283,9 @@ type try_statement (* inlined *) = (
     Token.t (* "try" *)
   * Token.t (* ":" *)
   * suite
-  * [
-        `Rep1_except_clause_opt_else_clause_opt_fina_clause of (
-            except_clause list (* one or more *)
-          * else_clause option
-          * finally_clause option
-        )
-      | `Rep1_except_group_clause_opt_else_clause_opt_fina_clause of (
-            except_group_clause list (* one or more *)
-          * else_clause option
-          * finally_clause option
-        )
-      | `Fina_clause of finally_clause
-    ]
+  * except_clause list (* zero or more *)
+  * else_clause option
+  * finally_clause option
 )
 
 type while_statement (* inlined *) = (

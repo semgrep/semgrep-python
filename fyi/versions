@@ -1,6 +1,6 @@
 File: semgrep-grammars/src/tree-sitter-python/LICENSE
 Git repo name: tree-sitter-python
-Latest commit in repo: 409b5d671eb0ea4972eeacaaca24bbec1acf79b1
+Latest commit in repo: 26855eabccb19c6abf499fbc5b8dc7cc9ab8bc64
 Last change in file:
   commit eb7313534683093b9ae7811991561131d6824828
   Author: Max Brunsfeld <maxbrunsfeld@gmail.com>
@@ -10,23 +10,23 @@ Last change in file:
 ---
 File: semgrep-grammars/src/tree-sitter-python/grammar.js
 Git repo name: tree-sitter-python
-Latest commit in repo: 409b5d671eb0ea4972eeacaaca24bbec1acf79b1
+Latest commit in repo: 26855eabccb19c6abf499fbc5b8dc7cc9ab8bc64
 Last change in file:
-  commit 9885368e8aa00e2fd6c6f2d28c4a9a7092140444
-  Author: Amaan Qureshi <amaanq12@gmail.com>
-  Date:   Sun Dec 22 17:57:39 2024 -0500
+  commit 26855eabccb19c6abf499fbc5b8dc7cc9ab8bc64
+  Author: Antonin Delpeuch <antonin@delpeuch.eu>
+  Date:   Mon Sep 15 23:33:35 2025 +0200
   
-      feat: add fields in `except_clause`
+      feat!: mark `expression_statement` as a supertype
 ---
 File: semgrep-grammars/src/semgrep-python/grammar.js
-Git repo name: ocaml-tree-sitter-semgrep
-Latest commit in repo: 58a4c3c46ea65e6208fc2a74143dc87bd4261f08
+Git repo name: tspython-cst-update
+Latest commit in repo: 7f68ce7c9922ccd2aeb8b0b46f59b7ef0dc1e07f
 Last change in file:
-  commit 58a4c3c46ea65e6208fc2a74143dc87bd4261f08
-  Author: brandonspark <wu.brandonj@gmail.com>
-  Date:   Tue Mar 3 16:12:17 2026 -0800
+  commit d68c1d87318808ec1b36ce89570ef6c0bc763f77
+  Author: Brandon Wu <49291449+brandonspark@users.noreply.github.com>
+  Date:   Wed Mar 4 13:06:00 2026 -0800
   
-      feat(python): support ellipsis in dot-access chain patterns
+      feat(python): support ellipsis in dot-access chain patterns (#567)
       
       Override the `attribute` rule to accept `'...'` as an alternative to
       `identifier` in the attribute field. This lets semgrep patterns like
@@ -35,5 +35,5 @@ Last change in file:
       
       Fixes https://github.com/semgrep/semgrep/issues/11545
       
-      Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+      Co-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 ---
