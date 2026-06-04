@@ -19,8 +19,8 @@ Last change in file:
       feat!: mark `expression_statement` as a supertype
 ---
 File: semgrep-grammars/src/semgrep-python/grammar.js
-Git repo name: tspython-cst-update
-Latest commit in repo: 7f68ce7c9922ccd2aeb8b0b46f59b7ef0dc1e07f
+Git repo name: ocaml-tree-sitter-semgrep
+Latest commit in repo: c010308753f7693277a1a3fae83d080e79e54ce5
 Last change in file:
   commit d68c1d87318808ec1b36ce89570ef6c0bc763f77
   Author: Brandon Wu <49291449+brandonspark@users.noreply.github.com>
