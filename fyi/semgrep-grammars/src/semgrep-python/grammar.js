@@ -66,37 +66,13 @@ module.exports = grammar(base_grammar, {
     // 'ellipsis' inside primary_expression.
     deep_ellipsis: $ => seq('<...', $.expression, '...>'),
 
-    // Restated wholesale (rather than `choice(previous, ...)`) so the new
-    // member is added to the *flat* choice. Using `previous` would wrap the
+    // Spread `previous.members` so the new member is added to the *flat*
+    // choice and we automatically track any members added by future upstream
+    // grammar bumps. Plain `choice(previous, ...)` would instead wrap the
     // original members under a single nested node and churn every site in the
     // conversion that destructures a primary_expression.
-    primary_expression: $ => choice(
-      $.await,
-      $.binary_operator,
-      $.identifier,
-      $.keyword_identifier,
-      $.string,
-      $.concatenated_string,
-      $.integer,
-      $.float,
-      $.true,
-      $.false,
-      $.none,
-      $.unary_operator,
-      $.attribute,
-      $.subscript,
-      $.call,
-      $.list,
-      $.list_comprehension,
-      $.dictionary,
-      $.dictionary_comprehension,
-      $.set,
-      $.set_comprehension,
-      $.tuple,
-      $.parenthesized_expression,
-      $.generator_expression,
-      $.ellipsis,
-      alias($.list_splat_pattern, $.list_splat),
+    primary_expression: ($, previous) => choice(
+      ...previous.members,
       $.deep_ellipsis,
     ),
 
@@ -125,17 +101,10 @@ module.exports = grammar(base_grammar, {
     ),
 
     // sgrep-ext: bare '...' as a parameter, e.g. 'def f(...)'
-    // (menhir AST: ParamEllipsis). Restated flat (see primary_expression note).
-    parameter: $ => choice(
-      $.identifier,
-      $.typed_parameter,
-      $.default_parameter,
-      $.typed_default_parameter,
-      $.list_splat_pattern,
-      $.tuple_pattern,
-      $.keyword_separator,
-      $.positional_separator,
-      $.dictionary_splat_pattern,
+    // (menhir AST: ParamEllipsis). Spread previous.members (see
+    // primary_expression note).
+    parameter: ($, previous) => choice(
+      ...previous.members,
       $.ellipsis,
     ),
 
@@ -160,16 +129,10 @@ module.exports = grammar(base_grammar, {
 
     // sgrep-ext: '...' as an assignment / for-in target, e.g. the 'for ...'
     // in '[... for ... in xs]'. The comprehension body already accepts '...'
-    // because it is a plain expression. Restated flat (see primary_expression
-    // note).
-    pattern: $ => choice(
-      $.identifier,
-      $.keyword_identifier,
-      $.subscript,
-      $.attribute,
-      $.list_splat_pattern,
-      $.tuple_pattern,
-      $.list_pattern,
+    // because it is a plain expression. Spread previous.members (see
+    // primary_expression note).
+    pattern: ($, previous) => choice(
+      ...previous.members,
       $.ellipsis,
     ),
 

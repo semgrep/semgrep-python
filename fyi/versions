@@ -20,13 +20,11 @@ Last change in file:
 ---
 File: semgrep-grammars/src/semgrep-python/grammar.js
 Git repo name: athens
-Latest commit in repo: e329e3135b1a99c2504ffc8b75f55083053e6431
+Latest commit in repo: c1251fd3669f676e7cd593f1a92bce523f25c261
 Last change in file:
-  commit e329e3135b1a99c2504ffc8b75f55083053e6431
+  commit c1251fd3669f676e7cd593f1a92bce523f25c261
   Author: Marc-André Laverdière <marc-andre@semgrep.com>
-  Date:   Fri Jun 19 10:06:04 2026 -0600
+  Date:   Fri Jun 19 15:02:08 2026 -0600
   
-      feat(python): add deep ellipsis, typed metavar, param/dict/comprehension ellipsis, standalone decorator to semgrep grammar
-      
-      Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+      simplifications
 ---
