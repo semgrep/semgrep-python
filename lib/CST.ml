@@ -146,8 +146,6 @@ and attribute = (
   * [ `Id of identifier (*tok*) | `DOTDOTDOT of Token.t (* "..." *) ]
 )
 
-and await = (Token.t (* "await" *) * primary_expression)
-
 and binary_operator = [
     `Prim_exp_PLUS_prim_exp of (
         primary_expression * Token.t (* "+" *) * primary_expression
@@ -195,11 +193,6 @@ and boolean_operator = [
   | `Exp_or_exp of (expression * Token.t (* "or" *) * expression)
 ]
 
-and call = (
-    primary_expression
-  * [ `Gene_exp of generator_expression | `Arg_list of argument_list ]
-)
-
 and collection_elements = (
     anon_choice_exp_03d361f
   * (Token.t (* "," *) * anon_choice_exp_03d361f) list (* zero or more *)
@@ -213,28 +206,6 @@ and comprehension_clauses = (
 )
 
 and concatenated_string = (string_ * string_ list (* one or more *))
-
-and default_parameter = (
-    [ `Id of identifier (*tok*) | `Tuple_pat_ of tuple_pattern_ ]
-  * Token.t (* "=" *)
-  * expression
-)
-
-and dictionary = (
-    Token.t (* "{" *)
-  * (
-        anon_choice_pair_fee7c83
-      * (Token.t (* "," *) * anon_choice_pair_fee7c83)
-          list (* zero or more *)
-    )
-      option
-  * Token.t (* "," *) option
-  * Token.t (* "}" *)
-)
-
-and dictionary_comprehension = (
-    Token.t (* "{" *) * pair * comprehension_clauses * Token.t (* "}" *)
-)
 
 and dictionary_splat = (Token.t (* "**" *) * expression)
 
@@ -348,19 +319,6 @@ and lambda_parameters = parameters_
 
 and left_hand_side = [ `Pat of pattern | `Pat_list of pattern_list ]
 
-and list_ = (
-    Token.t (* "[" *)
-  * collection_elements option
-  * Token.t (* "]" *)
-)
-
-and list_comprehension = (
-    Token.t (* "[" *) * expression * comprehension_clauses
-  * Token.t (* "]" *)
-)
-
-and list_pattern_ = (Token.t (* "[" *) * patterns option * Token.t (* "]" *))
-
 and list_splat = (Token.t (* "*" *) * expression)
 
 and list_splat_pattern = (Token.t (* "*" *) * anon_choice_id_9e93682)
@@ -368,17 +326,30 @@ and list_splat_pattern = (Token.t (* "*" *) * anon_choice_id_9e93682)
 and pair = (expression * Token.t (* ":" *) * expression)
 
 and parameter = [
-    `Choice_id of [
-        `Id of identifier (*tok*)
-      | `Typed_param of typed_parameter
-      | `Defa_param of default_parameter
-      | `Typed_defa_param of typed_default_parameter
-      | `List_splat_pat of list_splat_pattern
-      | `Tuple_pat_ of tuple_pattern_
-      | `Kw_sepa of Token.t (* "*" *)
-      | `Posi_sepa of Token.t (* "/" *)
-      | `Dict_splat_pat of dictionary_splat_pattern
-    ]
+    `Id of identifier (*tok*)
+  | `Typed_param of (
+        [
+            `Id of identifier (*tok*)
+          | `List_splat_pat of list_splat_pattern
+          | `Dict_splat_pat of dictionary_splat_pattern
+        ]
+      * Token.t (* ":" *)
+      * type_
+    )
+  | `Defa_param of (
+        [ `Id of identifier (*tok*) | `Tuple_pat_ of tuple_pattern_ ]
+      * Token.t (* "=" *)
+      * expression
+    )
+  | `Typed_defa_param of (
+        identifier (*tok*) * Token.t (* ":" *) * type_ * Token.t (* "=" *)
+      * expression
+    )
+  | `List_splat_pat of list_splat_pattern
+  | `Tuple_pat_ of tuple_pattern_
+  | `Kw_sepa of Token.t (* "*" *)
+  | `Posi_sepa of Token.t (* "/" *)
+  | `Dict_splat_pat of dictionary_splat_pattern
   | `Ellips of Token.t (* "..." *)
 ]
 
@@ -386,12 +357,6 @@ and parameters_ = (
     parameter
   * (Token.t (* "," *) * parameter) list (* zero or more *)
   * Token.t (* "," *) option
-)
-
-and parenthesized_expression = (
-    Token.t (* "(" *)
-  * [ `Exp of expression | `Yield of yield ]
-  * Token.t (* ")" *)
 )
 
 and parenthesized_list_splat = (
@@ -404,15 +369,13 @@ and parenthesized_list_splat = (
 )
 
 and pattern = [
-    `Choice_id of [
-        `Id of identifier (*tok*)
-      | `Choice_choice_print of keyword_identifier
-      | `Subs of subscript
-      | `Attr of attribute
-      | `List_splat_pat of list_splat_pattern
-      | `Tuple_pat_ of tuple_pattern_
-      | `List_pat_ of list_pattern_
-    ]
+    `Id of identifier (*tok*)
+  | `Choice_choice_print of keyword_identifier
+  | `Subs of subscript
+  | `Attr of attribute
+  | `List_splat_pat of list_splat_pattern
+  | `Tuple_pat_ of tuple_pattern_
+  | `List_pat_ of (Token.t (* "[" *) * patterns option * Token.t (* "]" *))
   | `Ellips of Token.t (* "..." *)
 ]
 
@@ -434,45 +397,76 @@ and patterns = (
 )
 
 and primary_expression = [
-    `Choice_await of [
-        `Await of await
-      | `Bin_op of binary_operator
-      | `Id of identifier (*tok*)
-      | `Choice_choice_print of keyword_identifier
-      | `Str of string_
-      | `Conc_str of concatenated_string
-      | `Int of integer (*tok*)
-      | `Float of float_ (*tok*)
-      | `True of Token.t (* "True" *)
-      | `False of Token.t (* "False" *)
-      | `None of Token.t (* "None" *)
-      | `Un_op of unary_operator
-      | `Attr of attribute
-      | `Subs of subscript
-      | `Call of call
-      | `List of list_
-      | `List_comp of list_comprehension
-      | `Dict of dictionary
-      | `Dict_comp of dictionary_comprehension
-      | `Set of set
-      | `Set_comp of set_comprehension
-      | `Tuple of tuple
-      | `Paren_exp of parenthesized_expression
-      | `Gene_exp of generator_expression
-      | `Ellips of Token.t (* "..." *)
-      | `List_splat_pat of list_splat_pattern
-    ]
+    `Await of (Token.t (* "await" *) * primary_expression)
+  | `Bin_op of binary_operator
+  | `Id of identifier (*tok*)
+  | `Choice_choice_print of keyword_identifier
+  | `Str of string_
+  | `Conc_str of concatenated_string
+  | `Int of integer (*tok*)
+  | `Float of float_ (*tok*)
+  | `True of Token.t (* "True" *)
+  | `False of Token.t (* "False" *)
+  | `None of Token.t (* "None" *)
+  | `Un_op of (
+        [
+            `PLUS of Token.t (* "+" *)
+          | `DASH of Token.t (* "-" *)
+          | `TILDE of Token.t (* "~" *)
+        ]
+      * primary_expression
+    )
+  | `Attr of attribute
+  | `Subs of subscript
+  | `Call of (
+        primary_expression
+      * [ `Gene_exp of generator_expression | `Arg_list of argument_list ]
+    )
+  | `List of (
+        Token.t (* "[" *)
+      * collection_elements option
+      * Token.t (* "]" *)
+    )
+  | `List_comp of (
+        Token.t (* "[" *) * expression * comprehension_clauses
+      * Token.t (* "]" *)
+    )
+  | `Dict of (
+        Token.t (* "{" *)
+      * (
+            anon_choice_pair_fee7c83
+          * (Token.t (* "," *) * anon_choice_pair_fee7c83)
+              list (* zero or more *)
+        )
+          option
+      * Token.t (* "," *) option
+      * Token.t (* "}" *)
+    )
+  | `Dict_comp of (
+        Token.t (* "{" *) * pair * comprehension_clauses * Token.t (* "}" *)
+    )
+  | `Set of (Token.t (* "{" *) * collection_elements * Token.t (* "}" *))
+  | `Set_comp of (
+        Token.t (* "{" *) * expression * comprehension_clauses
+      * Token.t (* "}" *)
+    )
+  | `Tuple of (
+        Token.t (* "(" *)
+      * collection_elements option
+      * Token.t (* ")" *)
+    )
+  | `Paren_exp of (
+        Token.t (* "(" *)
+      * [ `Exp of expression | `Yield of yield ]
+      * Token.t (* ")" *)
+    )
+  | `Gene_exp of generator_expression
+  | `Ellips of Token.t (* "..." *)
+  | `List_splat_pat of list_splat_pattern
   | `Deep_ellips of (
         Token.t (* "<..." *) * expression * Token.t (* "...>" *)
     )
 ]
-
-and set = (Token.t (* "{" *) * collection_elements * Token.t (* "}" *))
-
-and set_comprehension = (
-    Token.t (* "{" *) * expression * comprehension_clauses
-  * Token.t (* "}" *)
-)
 
 and string_ = (
     string_start (*tok*)
@@ -488,12 +482,6 @@ and subscript = (
   * (Token.t (* "," *) * anon_choice_exp_a577897) list (* zero or more *)
   * Token.t (* "," *) option
   * Token.t (* "]" *)
-)
-
-and tuple = (
-    Token.t (* "(" *)
-  * collection_elements option
-  * Token.t (* ")" *)
 )
 
 and tuple_pattern_ = (
@@ -520,30 +508,6 @@ and type_parameter = (
   * (Token.t (* "," *) * type_) list (* zero or more *)
   * Token.t (* "," *) option
   * Token.t (* "]" *)
-)
-
-and typed_default_parameter = (
-    identifier (*tok*) * Token.t (* ":" *) * type_ * Token.t (* "=" *)
-  * expression
-)
-
-and typed_parameter = (
-    [
-        `Id of identifier (*tok*)
-      | `List_splat_pat of list_splat_pattern
-      | `Dict_splat_pat of dictionary_splat_pattern
-    ]
-  * Token.t (* ":" *)
-  * type_
-)
-
-and unary_operator = (
-    [
-        `PLUS of Token.t (* "+" *)
-      | `DASH of Token.t (* "-" *)
-      | `TILDE of Token.t (* "~" *)
-    ]
-  * primary_expression
 )
 
 and yield = (
@@ -1018,6 +982,13 @@ type as_pattern_ (* inlined *) = (
     expression * Token.t (* "as" *) * expression
 )
 
+type await (* inlined *) = (Token.t (* "await" *) * primary_expression)
+
+type call (* inlined *) = (
+    primary_expression
+  * [ `Gene_exp of generator_expression | `Arg_list of argument_list ]
+)
+
 type comparison_operator (* inlined *) = (
     primary_expression
   * (
@@ -1050,6 +1021,28 @@ type deep_ellipsis (* inlined *) = (
     Token.t (* "<..." *) * expression * Token.t (* "...>" *)
 )
 
+type default_parameter (* inlined *) = (
+    [ `Id of identifier (*tok*) | `Tuple_pat_ of tuple_pattern_ ]
+  * Token.t (* "=" *)
+  * expression
+)
+
+type dictionary (* inlined *) = (
+    Token.t (* "{" *)
+  * (
+        anon_choice_pair_fee7c83
+      * (Token.t (* "," *) * anon_choice_pair_fee7c83)
+          list (* zero or more *)
+    )
+      option
+  * Token.t (* "," *) option
+  * Token.t (* "}" *)
+)
+
+type dictionary_comprehension (* inlined *) = (
+    Token.t (* "{" *) * pair * comprehension_clauses * Token.t (* "}" *)
+)
+
 type generic_type (* inlined *) = (
     [ `Id of identifier (*tok*) | `Type of Token.t (* "type" *) ]
   * type_parameter
@@ -1073,6 +1066,23 @@ type lambda_within_for_in_clause (* inlined *) = (
   * expression_within_for_in_clause
 )
 
+type list_ (* inlined *) = (
+    Token.t (* "[" *)
+  * collection_elements option
+  * Token.t (* "]" *)
+)
+
+type list_comprehension (* inlined *) = (
+    Token.t (* "[" *) * expression * comprehension_clauses
+  * Token.t (* "]" *)
+)
+
+type list_pattern_ (* inlined *) = (
+    Token.t (* "[" *)
+  * patterns option
+  * Token.t (* "]" *)
+)
+
 type member_type (* inlined *) = (
     type_ * Token.t (* "." *) * identifier (*tok*)
 )
@@ -1083,6 +1093,21 @@ type named_expression (* inlined *) = (
 
 type not_operator (* inlined *) = (Token.t (* "not" *) * expression)
 
+type parenthesized_expression (* inlined *) = (
+    Token.t (* "(" *)
+  * [ `Exp of expression | `Yield of yield ]
+  * Token.t (* ")" *)
+)
+
+type set (* inlined *) = (
+    Token.t (* "{" *) * collection_elements * Token.t (* "}" *)
+)
+
+type set_comprehension (* inlined *) = (
+    Token.t (* "{" *) * expression * comprehension_clauses
+  * Token.t (* "}" *)
+)
+
 type slice (* inlined *) = (
     expression option
   * Token.t (* ":" *)
@@ -1090,8 +1115,38 @@ type slice (* inlined *) = (
   * (Token.t (* ":" *) * expression option) option
 )
 
+type tuple (* inlined *) = (
+    Token.t (* "(" *)
+  * collection_elements option
+  * Token.t (* ")" *)
+)
+
+type typed_default_parameter (* inlined *) = (
+    identifier (*tok*) * Token.t (* ":" *) * type_ * Token.t (* "=" *)
+  * expression
+)
+
 type typed_metavariable (* inlined *) = (
     identifier (*tok*) * Token.t (* ":" *) * type_
+)
+
+type typed_parameter (* inlined *) = (
+    [
+        `Id of identifier (*tok*)
+      | `List_splat_pat of list_splat_pattern
+      | `Dict_splat_pat of dictionary_splat_pattern
+    ]
+  * Token.t (* ":" *)
+  * type_
+)
+
+type unary_operator (* inlined *) = (
+    [
+        `PLUS of Token.t (* "+" *)
+      | `DASH of Token.t (* "-" *)
+      | `TILDE of Token.t (* "~" *)
+    ]
+  * primary_expression
 )
 
 type union_type (* inlined *) = (type_ * Token.t (* "|" *) * type_)

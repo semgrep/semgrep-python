@@ -20,9 +20,9 @@ Last change in file:
 ---
 File: semgrep-grammars/src/semgrep-python/grammar.js
 Git repo name: athens
-Latest commit in repo: a180a015a7d711edaab892d8539bbff0067b2117
+Latest commit in repo: e329e3135b1a99c2504ffc8b75f55083053e6431
 Last change in file:
-  commit a180a015a7d711edaab892d8539bbff0067b2117
+  commit e329e3135b1a99c2504ffc8b75f55083053e6431
   Author: Marc-André Laverdière <marc-andre@semgrep.com>
   Date:   Fri Jun 19 10:06:04 2026 -0600
   
