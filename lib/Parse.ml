@@ -217,6 +217,7 @@ let children_regexps : (string * Run.exp option) list = [
             Token (Name "dictionary_splat");
             Token (Name "parenthesized_list_splat");
             Token (Name "keyword_argument");
+            Token (Name "typed_metavariable");
           |];
           Repeat (
             Seq [
@@ -227,6 +228,7 @@ let children_regexps : (string * Run.exp option) list = [
                 Token (Name "dictionary_splat");
                 Token (Name "parenthesized_list_splat");
                 Token (Name "keyword_argument");
+                Token (Name "typed_metavariable");
               |];
             ];
           );
@@ -447,6 +449,14 @@ let children_regexps : (string * Run.exp option) list = [
       Token (Name "type");
     ];
   );
+  "deep_ellipsis",
+  Some (
+    Seq [
+      Token (Literal "<...");
+      Token (Name "expression");
+      Token (Literal "...>");
+    ];
+  );
   "default_parameter",
   Some (
     Seq [
@@ -467,6 +477,7 @@ let children_regexps : (string * Run.exp option) list = [
           Alt [|
             Token (Name "pair");
             Token (Name "dictionary_splat");
+            Token (Name "ellipsis");
           |];
           Repeat (
             Seq [
@@ -474,6 +485,7 @@ let children_regexps : (string * Run.exp option) list = [
               Alt [|
                 Token (Name "pair");
                 Token (Name "dictionary_splat");
+                Token (Name "ellipsis");
               |];
             ];
           );
@@ -799,6 +811,7 @@ let children_regexps : (string * Run.exp option) list = [
       Token (Name "keyword_separator");
       Token (Name "positional_separator");
       Token (Name "dictionary_splat_pattern");
+      Token (Name "ellipsis");
     |];
   );
   "parameters_",
@@ -859,6 +872,7 @@ let children_regexps : (string * Run.exp option) list = [
       Token (Name "list_splat_pattern");
       Token (Name "tuple_pattern_");
       Token (Name "list_pattern_");
+      Token (Name "ellipsis");
     |];
   );
   "pattern_list",
@@ -936,6 +950,7 @@ let children_regexps : (string * Run.exp option) list = [
       Token (Name "generator_expression");
       Token (Name "ellipsis");
       Token (Name "list_splat_pattern");
+      Token (Name "deep_ellipsis");
     |];
   );
   "set",
@@ -1068,6 +1083,14 @@ let children_regexps : (string * Run.exp option) list = [
       Token (Name "type");
       Token (Literal "=");
       Token (Name "expression");
+    ];
+  );
+  "typed_metavariable",
+  Some (
+    Seq [
+      Token (Name "identifier");
+      Token (Literal ":");
+      Token (Name "type");
     ];
   );
   "typed_parameter",
@@ -2032,9 +2055,12 @@ let children_regexps : (string * Run.exp option) list = [
   );
   "module",
   Some (
-    Repeat (
-      Token (Name "statement");
-    );
+    Alt [|
+      Repeat (
+        Token (Name "statement");
+      );
+      Token (Name "decorator");
+    |];
   );
 ]
 
@@ -2529,6 +2555,10 @@ let rec trans_argument_list ((kind, body) : mt) : CST.argument_list =
                           `Kw_arg (
                             trans_keyword_argument (Run.matcher_token v)
                           )
+                      | Alt (5, v) ->
+                          `Typed_meta (
+                            trans_typed_metavariable (Run.matcher_token v)
+                          )
                       | _ -> assert false
                       )
                       ,
@@ -2558,6 +2588,10 @@ let rec trans_argument_list ((kind, body) : mt) : CST.argument_list =
                                 | Alt (4, v) ->
                                     `Kw_arg (
                                       trans_keyword_argument (Run.matcher_token v)
+                                    )
+                                | Alt (5, v) ->
+                                    `Typed_meta (
+                                      trans_typed_metavariable (Run.matcher_token v)
                                     )
                                 | _ -> assert false
                                 )
@@ -3060,6 +3094,20 @@ and trans_constrained_type ((kind, body) : mt) : CST.constrained_type =
       )
   | Leaf _ -> assert false
 
+and trans_deep_ellipsis ((kind, body) : mt) : CST.deep_ellipsis =
+  match body with
+  | Children v ->
+      (match v with
+      | Seq [v0; v1; v2] ->
+          (
+            Run.trans_token (Run.matcher_token v0),
+            trans_expression (Run.matcher_token v1),
+            Run.trans_token (Run.matcher_token v2)
+          )
+      | _ -> assert false
+      )
+  | Leaf _ -> assert false
+
 and trans_default_parameter ((kind, body) : mt) : CST.default_parameter =
   match body with
   | Children v ->
@@ -3106,6 +3154,10 @@ and trans_dictionary ((kind, body) : mt) : CST.dictionary =
                           `Dict_splat (
                             trans_dictionary_splat (Run.matcher_token v)
                           )
+                      | Alt (2, v) ->
+                          `Ellips (
+                            trans_ellipsis (Run.matcher_token v)
+                          )
                       | _ -> assert false
                       )
                       ,
@@ -3123,6 +3175,10 @@ and trans_dictionary ((kind, body) : mt) : CST.dictionary =
                                 | Alt (1, v) ->
                                     `Dict_splat (
                                       trans_dictionary_splat (Run.matcher_token v)
+                                    )
+                                | Alt (2, v) ->
+                                    `Ellips (
+                                      trans_ellipsis (Run.matcher_token v)
                                     )
                                 | _ -> assert false
                                 )
@@ -3851,6 +3907,10 @@ and trans_parameter ((kind, body) : mt) : CST.parameter =
           `Dict_splat_pat (
             trans_dictionary_splat_pattern (Run.matcher_token v)
           )
+      | Alt (9, v) ->
+          `Ellips (
+            trans_ellipsis (Run.matcher_token v)
+          )
       | _ -> assert false
       )
   | Leaf _ -> assert false
@@ -4002,6 +4062,10 @@ and trans_pattern ((kind, body) : mt) : CST.pattern =
       | Alt (6, v) ->
           `List_pat_ (
             trans_list_pattern_ (Run.matcher_token v)
+          )
+      | Alt (7, v) ->
+          `Ellips (
+            trans_ellipsis (Run.matcher_token v)
           )
       | _ -> assert false
       )
@@ -4224,6 +4288,10 @@ and trans_primary_expression ((kind, body) : mt) : CST.primary_expression =
       | Alt (25, v) ->
           `List_splat_pat (
             trans_list_splat_pattern (Run.matcher_token v)
+          )
+      | Alt (26, v) ->
+          `Deep_ellips (
+            trans_deep_ellipsis (Run.matcher_token v)
           )
       | _ -> assert false
       )
@@ -4482,6 +4550,20 @@ and trans_typed_default_parameter ((kind, body) : mt) : CST.typed_default_parame
             trans_type_ (Run.matcher_token v2),
             Run.trans_token (Run.matcher_token v3),
             trans_expression (Run.matcher_token v4)
+          )
+      | _ -> assert false
+      )
+  | Leaf _ -> assert false
+
+and trans_typed_metavariable ((kind, body) : mt) : CST.typed_metavariable =
+  match body with
+  | Children v ->
+      (match v with
+      | Seq [v0; v1; v2] ->
+          (
+            trans_identifier (Run.matcher_token v0),
+            Run.trans_token (Run.matcher_token v1),
+            trans_type_ (Run.matcher_token v2)
           )
       | _ -> assert false
       )
@@ -6669,9 +6751,19 @@ and trans_with_statement ((kind, body) : mt) : CST.with_statement =
 let trans_module_ ((kind, body) : mt) : CST.module_ =
   match body with
   | Children v ->
-      Run.repeat
-        (fun v -> trans_statement (Run.matcher_token v))
-        v
+      (match v with
+      | Alt (0, v) ->
+          `Rep_stmt (
+            Run.repeat
+              (fun v -> trans_statement (Run.matcher_token v))
+              v
+          )
+      | Alt (1, v) ->
+          `Deco (
+            trans_decorator (Run.matcher_token v)
+          )
+      | _ -> assert false
+      )
   | Leaf _ -> assert false
 
 
